@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap");
+
+:root {
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Space Grotesk", "Trebuchet MS", sans-serif;
+  --ink: #1b1b21;
+  --muted: #5b6472;
+  --accent: #ff6b4a;
+  --accent-2: #1aa79a;
+  --accent-3: #f7b267;
+  --card: #ffffff;
+  --canvas: #f8f1e8;
+  --border: #eadfce;
+  --shadow: 0 30px 60px rgba(30, 41, 59, 0.12);
+  --shadow-soft: 0 16px 30px rgba(15, 23, 42, 0.08);
+
+  color: var(--ink);
+  background-color: var(--canvas);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(140deg, #fff4e6 0%, #e7f3f1 55%, #f6f2ff 100%);
+  color: var(--ink);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input,
+select {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fffaf4;
+  transition: border 150ms ease, box-shadow 150ms ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #f3b091;
+  box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.2);
+}

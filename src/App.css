@@ -338,9 +338,34 @@
   color: #a33b26;
 }
 
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .task-reward {
   font-weight: 600;
   color: #2f2a3b;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(47, 42, 59, 0.2);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  color: #5b6472;
+  background: rgba(255, 255, 255, 0.7);
+  transition: all 150ms ease;
+}
+
+.icon-button:hover {
+  border-color: rgba(255, 107, 74, 0.7);
+  color: #ff6b4a;
+  transform: translateY(-1px);
 }
 
 .empty-state {
@@ -441,6 +466,11 @@
   .task-reward {
     grid-column: 1 / -1;
     text-align: right;
+  }
+
+  .task-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
   }
 
   .reminder-stack {

@@ -220,6 +220,13 @@ function App() {
     );
   }
 
+  function deleteTask(id) {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+    setActiveReminders((prev) =>
+      prev.filter((reminder) => !reminder.id.startsWith(`${id}-`))
+    );
+  }
+
   const level = Math.floor(xp / 100) + 1;
   const levelProgress = xp % 100;
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -339,6 +346,7 @@ function App() {
           <TaskList
             tasks={sortedTasks}
             toggleTask={toggleTask}
+            deleteTask={deleteTask}
             xpPerComplete={XP_PER_COMPLETE}
             reminderLabel={reminderLabel}
           />

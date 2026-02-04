@@ -20,7 +20,13 @@ const formatDateTime = (date, time) => {
   return `${dateLabel} · ${timeLabel}`;
 };
 
-function TaskList({ tasks, toggleTask, xpPerComplete, reminderLabel }) {
+function TaskList({
+  tasks,
+  toggleTask,
+  deleteTask,
+  xpPerComplete,
+  reminderLabel,
+}) {
   const now = Date.now();
 
   if (tasks.length === 0) {
@@ -82,8 +88,18 @@ function TaskList({ tasks, toggleTask, xpPerComplete, reminderLabel }) {
               </div>
             </div>
 
-            <div className="task-reward">
-              {task.completed ? "Completed" : `+${xpPerComplete} XP`}
+            <div className="task-actions">
+              <div className="task-reward">
+                {task.completed ? "Completed" : `+${xpPerComplete} XP`}
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => deleteTask(task.id)}
+                aria-label={`Delete ${task.title}`}
+              >
+                ✕
+              </button>
             </div>
           </li>
         );

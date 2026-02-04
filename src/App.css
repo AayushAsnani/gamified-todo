@@ -343,6 +343,34 @@
   color: #2f2a3b;
 }
 
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.task-delete {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 107, 74, 0.4);
+  background: rgba(255, 107, 74, 0.1);
+  color: #a33b26;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.task-delete:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(255, 107, 74, 0.22);
+}
+
+.task-delete:focus-visible {
+  outline: 2px solid rgba(255, 107, 74, 0.6);
+  outline-offset: 2px;
+}
+
 .empty-state {
   border-radius: 16px;
   border: 1px dashed var(--border);
@@ -438,9 +466,9 @@
     grid-template-rows: auto auto;
   }
 
-  .task-reward {
+  .task-actions {
     grid-column: 1 / -1;
-    text-align: right;
+    justify-content: flex-end;
   }
 
   .reminder-stack {

@@ -119,6 +119,7 @@ function App() {
         setActiveReminders((prev) => [
           {
             id: `${task.id}-${Date.now()}`,
+            taskId: task.id,
             title: task.title,
             date: task.date,
             time: task.time,
@@ -218,6 +219,19 @@ function App() {
         t.id === id ? { ...t, completed: !t.completed } : t
       )
     );
+  }
+
+  function deleteTask(id) {
+    const timeoutId = reminderTimers.current.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      reminderTimers.current.delete(id);
+    }
+
+    setActiveReminders((prev) =>
+      prev.filter((reminder) => reminder.taskId !== id)
+    );
+    setTasks((prev) => prev.filter((task) => task.id !== id));
   }
 
   const level = Math.floor(xp / 100) + 1;
@@ -339,6 +353,7 @@ function App() {
           <TaskList
             tasks={sortedTasks}
             toggleTask={toggleTask}
+            onDelete={deleteTask}
             xpPerComplete={XP_PER_COMPLETE}
             reminderLabel={reminderLabel}
           />

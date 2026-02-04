@@ -338,37 +338,15 @@
   color: #a33b26;
 }
 
-.task-reward {
-  font-weight: 600;
-  color: #2f2a3b;
-}
-
 .task-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  justify-content: flex-end;
+  gap: 10px;
 }
 
-.task-delete {
-  border-radius: 999px;
-  border: 1px solid rgba(255, 107, 74, 0.4);
-  background: rgba(255, 107, 74, 0.1);
-  color: #a33b26;
-  font-size: 0.75rem;
+.task-reward {
   font-weight: 600;
-  padding: 6px 12px;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.task-delete:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(255, 107, 74, 0.22);
-}
-
-.task-delete:focus-visible {
-  outline: 2px solid rgba(255, 107, 74, 0.6);
-  outline-offset: 2px;
+  color: #2f2a3b;
 }
 
 .empty-state {
@@ -424,6 +402,7 @@
     opacity: 0;
     transform: translateY(16px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -435,6 +414,7 @@
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -468,7 +448,7 @@
 
   .task-actions {
     grid-column: 1 / -1;
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .reminder-stack {

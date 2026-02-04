@@ -221,19 +221,6 @@ function App() {
     );
   }
 
-  function deleteTask(id) {
-    const timeoutId = reminderTimers.current.get(id);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      reminderTimers.current.delete(id);
-    }
-
-    setActiveReminders((prev) =>
-      prev.filter((reminder) => reminder.taskId !== id)
-    );
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-  }
-
   const level = Math.floor(xp / 100) + 1;
   const levelProgress = xp % 100;
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -353,7 +340,6 @@ function App() {
           <TaskList
             tasks={sortedTasks}
             toggleTask={toggleTask}
-            onDelete={deleteTask}
             xpPerComplete={XP_PER_COMPLETE}
             reminderLabel={reminderLabel}
           />

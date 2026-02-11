@@ -1,3 +1,5 @@
+import TaskMenu from "./TaskMenu";
+
 const buildDateTime = (date, time) => {
   if (!date || !time) return null;
   const parsed = new Date(`${date}T${time}`);
@@ -20,7 +22,7 @@ const formatDateTime = (date, time) => {
   return `${dateLabel} · ${timeLabel}`;
 };
 
-function TaskList({ tasks, toggleTask, xpPerComplete, reminderLabel }) {
+function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, reminderLabel }) {
   const now = Date.now();
 
   if (tasks.length === 0) {
@@ -47,9 +49,8 @@ function TaskList({ tasks, toggleTask, xpPerComplete, reminderLabel }) {
         return (
           <li
             key={task.id}
-            className={`task-card${task.completed ? " is-complete" : ""}${
-              isOverdue ? " is-overdue" : ""
-            }`}
+            className={`task-card${task.completed ? " is-complete" : ""}${isOverdue ? " is-overdue" : ""
+              }`}
             style={{ "--delay": `${index * 70}ms` }}
           >
             <button
@@ -85,6 +86,12 @@ function TaskList({ tasks, toggleTask, xpPerComplete, reminderLabel }) {
             <div className="task-reward">
               {task.completed ? "Completed" : `+${xpPerComplete} XP`}
             </div>
+
+            <TaskMenu
+              taskId={task.id}
+              onReschedule={onReschedule}
+              onDelete={onDelete}
+            />
           </li>
         );
       })}

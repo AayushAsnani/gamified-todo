@@ -48,6 +48,11 @@ function App() {
   const [lastCompletedDate, setLastCompletedDate] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
 
+  // Reschedule modal state
+  const [rescheduleTaskId, setRescheduleTaskId] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+
   const reminderTimers = useRef(new Map());
 
   const notificationsSupported =
@@ -186,6 +191,46 @@ function App() {
     setDate("");
     setTime("");
     setReminderMinutes("none");
+  }
+
+  // ---------------- DELETE TASK ----------------
+  function deleteTask(id) {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+    // Clear any active reminder for this task
+    if (reminderTimers.current.has(id)) {
+      clearTimeout(reminderTimers.current.get(id));
+      reminderTimers.current.delete(id);
+    }
+    setActiveReminders((prev) => prev.filter((r) => r.taskId !== id));
+  }
+
+  // ---------------- RESCHEDULE TASK ----------------
+  function openRescheduleModal(id) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    setRescheduleTaskId(id);
+    setRescheduleDate(task.date);
+    setRescheduleTime(task.time);
+  }
+
+  function closeRescheduleModal() {
+    setRescheduleTaskId(null);
+    setRescheduleDate("");
+    setRescheduleTime("");
+  }
+
+  function saveReschedule(event) {
+    event?.preventDefault();
+    if (!rescheduleTaskId || !rescheduleDate || !rescheduleTime) return;
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === rescheduleTaskId
+          ? { ...t, date: rescheduleDate, time: rescheduleTime }
+          : t
+      )
+    );
+    closeRescheduleModal();
   }
 
   // ---------------- TOGGLE TASK (XP + STREAK) ----------------
@@ -340,11 +385,58 @@ function App() {
           <TaskList
             tasks={sortedTasks}
             toggleTask={toggleTask}
+            onReschedule={openRescheduleModal}
+            onDelete={deleteTask}
             xpPerComplete={XP_PER_COMPLETE}
             reminderLabel={reminderLabel}
           />
         </section>
       </main>
+
+      {rescheduleTaskId && (
+        <div className="reschedule-overlay" onClick={closeRescheduleModal}>
+          <div
+            className="reschedule-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Reschedule Quest</h3>
+            <form onSubmit={saveReschedule}>
+              <div className="field">
+                <label htmlFor="reschedule-date">New Date</label>
+                <input
+                  id="reschedule-date"
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="reschedule-time">New Time</label>
+                <input
+                  id="reschedule-time"
+                  type="time"
+                  value={rescheduleTime}
+                  onChange={(e) => setRescheduleTime(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={closeRescheduleModal}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {activeReminders.length > 0 ? (
         <div className="reminder-stack" aria-live="polite">

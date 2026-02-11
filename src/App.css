@@ -260,7 +260,7 @@
 
 .task-card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 16px;
   padding: 16px 18px;
@@ -347,6 +347,139 @@
 .task-reward {
   font-weight: 600;
   color: #2f2a3b;
+}
+
+/* Task Menu Styles */
+.task-menu {
+  position: relative;
+}
+
+.task-menu-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.3rem;
+  display: grid;
+  place-items: center;
+  transition: all 150ms ease;
+  border: 1px solid transparent;
+}
+
+.task-menu-button:hover {
+  background: rgba(47, 42, 59, 0.08);
+  color: #2f2a3b;
+  border-color: var(--border);
+}
+
+.task-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.task-menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: #fff;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2f2a3b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 120ms ease;
+  cursor: pointer;
+}
+
+.task-menu-item:hover {
+  background: rgba(47, 42, 59, 0.05);
+}
+
+.task-menu-item-danger {
+  color: #d63031;
+}
+
+.task-menu-item-danger:hover {
+  background: rgba(214, 48, 49, 0.08);
+}
+
+.task-menu-icon {
+  font-size: 1.1rem;
+}
+
+/* Reschedule Modal Styles */
+.reschedule-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 27, 33, 0.6);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 200ms ease;
+}
+
+.reschedule-modal {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideUp 280ms ease;
+}
+
+.reschedule-modal h3 {
+  margin: 0 0 20px;
+  font-family: var(--font-display);
+  color: #201b27;
+  font-size: 1.5rem;
+}
+
+.reschedule-modal form {
+  display: grid;
+  gap: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .empty-state {
@@ -442,8 +575,19 @@
   }
 
   .task-card {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     grid-template-rows: auto auto;
+  }
+
+  .task-reward {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .task-menu {
+    grid-column: 3;
+    grid-row: 1 / -1;
   }
 
   .task-actions {

@@ -21,13 +21,13 @@
 .app::before {
   top: -140px;
   right: -120px;
-  background: radial-gradient(circle, rgba(255, 107, 74, 0.5), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 140, 148, 0.4), transparent 70%);
 }
 
 .app::after {
   bottom: -160px;
   left: -120px;
-  background: radial-gradient(circle, rgba(26, 167, 154, 0.45), transparent 70%);
+  background: radial-gradient(circle, rgba(174, 252, 206, 0.5), transparent 70%);
 }
 
 .shell {
@@ -81,7 +81,7 @@
 }
 
 .hero-card {
-  background: linear-gradient(145deg, #1b1b21, #2f2a3b);
+  background: linear-gradient(145deg, #FF8C94, #FFAAA5);
   color: #fff;
   padding: 22px;
   border-radius: 20px;
@@ -140,14 +140,14 @@
 
 .progress-bar {
   height: 10px;
-  background: #f0e6d8;
+  background: #E6EFC2;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff6b4a, #f7b267);
+  background: linear-gradient(90deg, #FF8C94, #FFCD82);
   border-radius: 999px;
   transition: width 300ms ease;
 }
@@ -176,7 +176,7 @@
 }
 
 .tips {
-  background: linear-gradient(135deg, #fff7ea, #f2fbf9);
+  background: linear-gradient(135deg, #E6EFC2, #AEFCCE);
 }
 
 .tips p {
@@ -215,16 +215,16 @@
 .primary-button {
   padding: 12px 18px;
   border-radius: 14px;
-  background: linear-gradient(120deg, #ff6b4a, #f7b267);
-  color: #1b1b21;
+  background: linear-gradient(120deg, #FF8C94, #FFCD82);
+  color: #fff;
   font-weight: 600;
-  box-shadow: 0 12px 24px rgba(255, 107, 74, 0.25);
+  box-shadow: 0 12px 24px rgba(255, 140, 148, 0.3);
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .primary-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 26px rgba(255, 107, 74, 0.28);
+  box-shadow: 0 16px 26px rgba(255, 140, 148, 0.35);
 }
 
 .ghost-button {
@@ -277,7 +277,7 @@
 }
 
 .task-card.is-overdue {
-  border-color: rgba(255, 107, 74, 0.6);
+  border-color: rgba(255, 140, 148, 0.6);
 }
 
 .check-button {
@@ -317,25 +317,25 @@
 .chip {
   padding: 4px 10px;
   border-radius: 999px;
-  background: #f4efe4;
+  background: #E6EFC2;
   color: #4b4258;
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 .chip-accent {
-  background: rgba(26, 167, 154, 0.15);
-  color: #1a6d66;
+  background: rgba(174, 252, 206, 0.3);
+  color: #2d6b5f;
 }
 
 .chip-warn {
-  background: rgba(247, 178, 103, 0.2);
-  color: #8a4a11;
+  background: rgba(255, 205, 130, 0.3);
+  color: #8a5a11;
 }
 
 .chip-danger {
-  background: rgba(255, 107, 74, 0.18);
-  color: #a33b26;
+  background: rgba(255, 140, 148, 0.25);
+  color: #a33b40;
 }
 
 .task-actions {

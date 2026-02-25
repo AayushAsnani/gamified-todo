@@ -298,17 +298,76 @@ function App() {
             </p>
           </div>
           <div className="hero-card">
-            <div>
-              <p className="hero-label">Level</p>
-              <p className="hero-value">{level}</p>
+            <div className="hero-card-stats">
+              <div>
+                <p className="hero-label">Level</p>
+                <p className="hero-value">{level}</p>
+              </div>
+              <div>
+                <p className="hero-label">XP</p>
+                <p className="hero-value">{xp}</p>
+              </div>
+              <div>
+                <p className="hero-label">Streak</p>
+                <p className="hero-value">{streak} days</p>
+              </div>
             </div>
-            <div>
-              <p className="hero-label">XP</p>
-              <p className="hero-value">{xp}</p>
-            </div>
-            <div>
-              <p className="hero-label">Streak</p>
-              <p className="hero-value">{streak} days</p>
+            <div className="hero-avatar">
+              <svg viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg" className="avatar-svg">
+                {/* Hat / Crown based on level */}
+                {level >= 3 && (
+                  <g className="avatar-crown">
+                    <polygon points="36,42 60,18 84,42" fill="rgba(255,205,130,0.9)" />
+                    <circle cx="60" cy="22" r="4" fill="rgba(255,140,148,0.9)" />
+                    <circle cx="44" cy="36" r="3" fill="rgba(174,252,206,0.9)" />
+                    <circle cx="76" cy="36" r="3" fill="rgba(174,252,206,0.9)" />
+                  </g>
+                )}
+                {/* Head */}
+                <circle cx="60" cy="58" r="24" fill="rgba(255,255,255,0.95)" />
+                {/* Eyes */}
+                <ellipse cx="50" cy="54" rx="3.5" ry="4" fill="#2f2a3b" />
+                <ellipse cx="70" cy="54" rx="3.5" ry="4" fill="#2f2a3b" />
+                {/* Eye sparkles */}
+                <circle cx="51.5" cy="52" r="1.5" fill="rgba(255,255,255,0.9)" />
+                <circle cx="71.5" cy="52" r="1.5" fill="rgba(255,255,255,0.9)" />
+                {/* Blush */}
+                <ellipse cx="42" cy="62" rx="5" ry="3" fill="rgba(255,140,148,0.5)" />
+                <ellipse cx="78" cy="62" rx="5" ry="3" fill="rgba(255,140,148,0.5)" />
+                {/* Mouth - happy if streak > 0 */}
+                {streak > 0 ? (
+                  <path d="M52 66 Q60 74 68 66" stroke="#2f2a3b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                ) : (
+                  <line x1="53" y1="68" x2="67" y2="68" stroke="#2f2a3b" strokeWidth="2.5" strokeLinecap="round" />
+                )}
+                {/* Body */}
+                <rect x="44" y="82" rx="12" ry="12" width="32" height="40" fill="rgba(255,255,255,0.85)" />
+                {/* Arms */}
+                <g className="avatar-left-arm">
+                  <rect x="22" y="88" rx="7" ry="7" width="22" height="14" fill="rgba(255,255,255,0.8)" />
+                </g>
+                <g className="avatar-right-arm">
+                  <rect x="76" y="88" rx="7" ry="7" width="22" height="14" fill="rgba(255,255,255,0.8)" />
+                </g>
+                {/* Legs */}
+                <rect x="46" y="120" rx="7" ry="7" width="12" height="28" fill="rgba(255,255,255,0.8)" />
+                <rect x="62" y="120" rx="7" ry="7" width="12" height="28" fill="rgba(255,255,255,0.8)" />
+                {/* Shoes */}
+                <ellipse cx="52" cy="150" rx="9" ry="5" fill="rgba(255,205,130,0.85)" />
+                <ellipse cx="68" cy="150" rx="9" ry="5" fill="rgba(255,205,130,0.85)" />
+                {/* Level badge on body */}
+                <circle cx="60" cy="100" r="8" fill="rgba(255,140,148,0.9)" />
+                <text x="60" y="104" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{level}</text>
+                {/* Star particles when XP is high */}
+                {xp > 100 && (
+                  <g className="avatar-sparkles">
+                    <text x="18" y="50" fontSize="12" fill="rgba(255,205,130,1)">✦</text>
+                    <text x="96" y="44" fontSize="10" fill="rgba(174,252,206,1)">✦</text>
+                    <text x="8" y="76" fontSize="8" fill="rgba(255,140,148,0.9)">✦</text>
+                    <text x="104" y="72" fontSize="14" fill="rgba(255,205,130,0.9)">✦</text>
+                  </g>
+                )}
+              </svg>
             </div>
           </div>
         </header>

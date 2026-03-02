@@ -313,17 +313,23 @@ function App() {
               </div>
             </div>
             <div className="hero-avatar">
-              <svg viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg" className="avatar-svg">
-                {/* Hat / Crown based on level */}
+              <svg viewBox="0 0 120 190" fill="none" xmlns="http://www.w3.org/2000/svg" className="avatar-svg">
+                {/* ===== HAT (bucket hat, appears at level 3+) ===== */}
                 {level >= 3 && (
                   <g className="avatar-crown">
-                    <polygon points="36,42 60,18 84,42" fill="rgba(255,205,130,0.9)" />
-                    <circle cx="60" cy="22" r="4" fill="rgba(255,140,148,0.9)" />
-                    <circle cx="44" cy="36" r="3" fill="rgba(174,252,206,0.9)" />
-                    <circle cx="76" cy="36" r="3" fill="rgba(174,252,206,0.9)" />
+                    {/* Hat brim */}
+                    <ellipse cx="60" cy="40" rx="32" ry="6" fill="#6c5ce7" />
+                    {/* Hat dome */}
+                    <path d="M38 40 Q38 18 60 16 Q82 18 82 40 Z" fill="#a29bfe" />
+                    {/* Hat band */}
+                    <rect x="38" y="36" width="44" height="5" rx="2" fill="#fd79a8" />
+                    {/* Hat badge */}
+                    <circle cx="60" cy="26" r="4" fill="rgba(255,205,130,0.95)" />
+                    <text x="60" y="29" textAnchor="middle" fill="#6c5ce7" fontSize="6" fontWeight="700">★</text>
                   </g>
                 )}
-                {/* Head */}
+
+                {/* ===== HEAD ===== */}
                 <circle cx="60" cy="58" r="24" fill="rgba(255,255,255,0.95)" />
                 {/* Eyes */}
                 <ellipse cx="50" cy="54" rx="3.5" ry="4" fill="#2f2a3b" />
@@ -340,25 +346,64 @@ function App() {
                 ) : (
                   <line x1="53" y1="68" x2="67" y2="68" stroke="#2f2a3b" strokeWidth="2.5" strokeLinecap="round" />
                 )}
-                {/* Body */}
-                <rect x="44" y="82" rx="12" ry="12" width="32" height="40" fill="rgba(255,255,255,0.85)" />
-                {/* Arms */}
+
+                {/* ===== T-SHIRT ===== */}
+                {/* Shirt body */}
+                <rect x="42" y="82" rx="12" ry="12" width="36" height="42" fill="#6c5ce7" />
+                {/* Collar / neckline */}
+                <path d="M50 82 Q60 90 70 82" stroke="#a29bfe" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                {/* Shirt bottom hem */}
+                <rect x="42" y="120" width="36" height="4" rx="2" fill="#5b4fcf" />
+                {/* Left sleeve */}
                 <g className="avatar-left-arm">
-                  <rect x="22" y="88" rx="7" ry="7" width="22" height="14" fill="rgba(255,255,255,0.8)" />
+                  <rect x="22" y="84" rx="8" ry="8" width="24" height="18" fill="#6c5ce7" />
+                  {/* Sleeve cuff */}
+                  <rect x="22" y="96" width="24" height="4" rx="2" fill="#5b4fcf" />
+                  {/* Exposed hand */}
+                  <ellipse cx="30" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
                 </g>
+                {/* Right sleeve */}
                 <g className="avatar-right-arm">
-                  <rect x="76" y="88" rx="7" ry="7" width="22" height="14" fill="rgba(255,255,255,0.8)" />
+                  <rect x="74" y="84" rx="8" ry="8" width="24" height="18" fill="#6c5ce7" />
+                  {/* Sleeve cuff */}
+                  <rect x="74" y="96" width="24" height="4" rx="2" fill="#5b4fcf" />
+                  {/* Exposed hand */}
+                  <ellipse cx="90" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
                 </g>
-                {/* Legs */}
-                <rect x="46" y="120" rx="7" ry="7" width="12" height="28" fill="rgba(255,255,255,0.8)" />
-                <rect x="62" y="120" rx="7" ry="7" width="12" height="28" fill="rgba(255,255,255,0.8)" />
-                {/* Shoes */}
-                <ellipse cx="52" cy="150" rx="9" ry="5" fill="rgba(255,205,130,0.85)" />
-                <ellipse cx="68" cy="150" rx="9" ry="5" fill="rgba(255,205,130,0.85)" />
-                {/* Level badge on body */}
-                <circle cx="60" cy="100" r="8" fill="rgba(255,140,148,0.9)" />
-                <text x="60" y="104" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{level}</text>
-                {/* Star particles when XP is high */}
+                {/* Level badge on t-shirt */}
+                <circle cx="60" cy="102" r="8" fill="rgba(255,140,148,0.9)" />
+                <text x="60" y="106" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{level}</text>
+
+                {/* ===== PANTS ===== */}
+                {/* Waistband */}
+                <rect x="43" y="122" width="34" height="5" rx="2" fill="#2d3436" />
+                {/* Belt buckle */}
+                <rect x="56" y="122" width="8" height="5" rx="1" fill="#ffeaa7" />
+                {/* Left leg */}
+                <rect x="44" y="126" rx="6" ry="4" width="14" height="30" fill="#636e72" />
+                {/* Right leg */}
+                <rect x="62" y="126" rx="6" ry="4" width="14" height="30" fill="#636e72" />
+                {/* Pant seams */}
+                <line x1="51" y1="128" x2="51" y2="155" stroke="#576060" strokeWidth="1" opacity="0.5" />
+                <line x1="69" y1="128" x2="69" y2="155" stroke="#576060" strokeWidth="1" opacity="0.5" />
+
+                {/* ===== BOOTS ===== */}
+                {/* Left boot */}
+                <rect x="41" y="153" rx="4" ry="4" width="18" height="14" fill="#2d3436" />
+                <rect x="38" y="162" rx="3" ry="3" width="22" height="8" fill="#2d3436" />
+                {/* Left boot sole */}
+                <rect x="38" y="168" rx="2" ry="2" width="22" height="3" fill="#1a1a2e" />
+                {/* Left boot strap */}
+                <rect x="42" y="156" width="16" height="2" rx="1" fill="#ffeaa7" />
+                {/* Right boot */}
+                <rect x="61" y="153" rx="4" ry="4" width="18" height="14" fill="#2d3436" />
+                <rect x="60" y="162" rx="3" ry="3" width="22" height="8" fill="#2d3436" />
+                {/* Right boot sole */}
+                <rect x="60" y="168" rx="2" ry="2" width="22" height="3" fill="#1a1a2e" />
+                {/* Right boot strap */}
+                <rect x="62" y="156" width="16" height="2" rx="1" fill="#ffeaa7" />
+
+                {/* ===== SPARKLE PARTICLES (high XP) ===== */}
                 {xp > 100 && (
                   <g className="avatar-sparkles">
                     <text x="18" y="50" fontSize="12" fill="rgba(255,205,130,1)">✦</text>

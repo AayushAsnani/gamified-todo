@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
+import Shop from "./components/Shop";
 import "./App.css";
 
 const XP_PER_CREATE = 5;
 const XP_PER_COMPLETE = 10;
 
 const REMINDER_OPTIONS = [
-  { label: "No reminder", value: "none" },
   { label: "At start time", value: "0" },
   { label: "5 min before", value: "5" },
   { label: "15 min before", value: "15" },
@@ -15,7 +15,7 @@ const REMINDER_OPTIONS = [
   { label: "1 hour before", value: "60" },
 ];
 
-const reminderLabel = (minutes) => {
+const singleReminderLabel = (minutes) => {
   if (minutes == null) return "No reminder";
   if (minutes === 0) return "At start time";
   if (minutes === 60) return "1 hour before";
@@ -29,24 +29,26 @@ const buildDateTime = (date, time) => {
   return parsed;
 };
 
-const normalizeReminder = (value) => {
-  if (value === "none") return null;
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? null : parsed;
-};
+const DIFFICULTY_XP = { easy: 5, medium: 10, hard: 20 };
 
 function App() {
   // ---------------- STATE ----------------
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [reminderMinutes, setReminderMinutes] = useState("none");
+  const [selectedReminders, setSelectedReminders] = useState([]);
+  const [difficulty, setDifficulty] = useState("easy");
   const [tasks, setTasks] = useState([]);
 
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
   const [lastCompletedDate, setLastCompletedDate] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
+
+  // Navigation state
+  const [currentPage, setCurrentPage] = useState("quests");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [purchasedItems, setPurchasedItems] = useState([]);
 
   // Reschedule modal state
   const [rescheduleTaskId, setRescheduleTaskId] = useState(null);
@@ -71,11 +73,13 @@ function App() {
       const savedXp = JSON.parse(localStorage.getItem("xp"));
       const savedStreak = JSON.parse(localStorage.getItem("streak"));
       const savedLastDate = localStorage.getItem("lastCompletedDate");
+      const savedPurchases = JSON.parse(localStorage.getItem("purchasedItems"));
 
       if (Array.isArray(savedTasks)) setTasks(savedTasks);
       if (typeof savedXp === "number") setXp(savedXp);
       if (typeof savedStreak === "number") setStreak(savedStreak);
       if (savedLastDate) setLastCompletedDate(savedLastDate);
+      if (Array.isArray(savedPurchases)) setPurchasedItems(savedPurchases);
     } catch (e) {
       console.error("Failed to load localStorage");
     } finally {
@@ -100,6 +104,12 @@ function App() {
     }
   }, [xp, streak, lastCompletedDate, isLoaded]);
 
+  // ---------------- SAVE PURCHASES ----------------
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("purchasedItems", JSON.stringify(purchasedItems));
+  }, [purchasedItems, isLoaded]);
+
   // ---------------- REMINDERS ----------------
   useEffect(() => {
     if (!isLoaded) return;
@@ -109,38 +119,41 @@ function App() {
 
     tasks.forEach((task) => {
       if (task.completed) return;
-      if (task.reminderMinutes == null) return;
+      // Support both legacy single reminder and new array
+      const reminders = task.reminders ?? (task.reminderMinutes != null ? [task.reminderMinutes] : []);
+      if (reminders.length === 0) return;
 
       const dueAt = buildDateTime(task.date, task.time);
       if (!dueAt) return;
 
-      const reminderAt =
-        dueAt.getTime() - task.reminderMinutes * 60 * 1000;
-      const delay = reminderAt - Date.now();
+      reminders.forEach((minutes, idx) => {
+        const reminderAt = dueAt.getTime() - minutes * 60 * 1000;
+        const delay = reminderAt - Date.now();
 
-      if (delay <= 0) return;
+        if (delay <= 0) return;
 
-      const timeoutId = setTimeout(() => {
-        setActiveReminders((prev) => [
-          {
-            id: `${task.id}-${Date.now()}`,
-            taskId: task.id,
-            title: task.title,
-            date: task.date,
-            time: task.time,
-            reminderMinutes: task.reminderMinutes,
-          },
-          ...prev,
-        ]);
+        const timeoutId = setTimeout(() => {
+          setActiveReminders((prev) => [
+            {
+              id: `${task.id}-${minutes}-${Date.now()}`,
+              taskId: task.id,
+              title: task.title,
+              date: task.date,
+              time: task.time,
+              reminderMinutes: minutes,
+            },
+            ...prev,
+          ]);
 
-        if (notificationsSupported && Notification.permission === "granted") {
-          new Notification("Quest Reminder", {
-            body: `${task.title} • ${task.date} ${task.time}`,
-          });
-        }
-      }, delay);
+          if (notificationsSupported && Notification.permission === "granted") {
+            new Notification("Quest Reminder", {
+              body: `${task.title} • ${task.date} ${task.time}`,
+            });
+          }
+        }, delay);
 
-      reminderTimers.current.set(task.id, timeoutId);
+        reminderTimers.current.set(`${task.id}-${idx}`, timeoutId);
+      });
     });
 
     return () => {
@@ -164,24 +177,34 @@ function App() {
     }
   };
 
+  // ---------------- TOGGLE REMINDER ----------------
+  function toggleReminder(value) {
+    setSelectedReminders((prev) =>
+      prev.includes(value)
+        ? prev.filter((v) => v !== value)
+        : [...prev, value]
+    );
+  }
+
   // ---------------- ADD TASK ----------------
   function addTask(event) {
     event?.preventDefault();
 
     if (!title || !date || !time) return;
 
-    const reminderValue = normalizeReminder(reminderMinutes);
+    const reminderValues = selectedReminders.map((v) => Number(v));
 
     const newTask = {
       id: Date.now(),
       title,
       date,
       time,
-      reminderMinutes: reminderValue,
+      reminders: reminderValues,
+      difficulty,
       completed: false,
     };
 
-    if (reminderValue != null) {
+    if (reminderValues.length > 0) {
       requestNotificationPermission();
     }
 
@@ -190,7 +213,8 @@ function App() {
     setTitle("");
     setDate("");
     setTime("");
-    setReminderMinutes("none");
+    setSelectedReminders([]);
+    setDifficulty("easy");
   }
 
   // ---------------- DELETE TASK ----------------
@@ -243,8 +267,10 @@ function App() {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
 
+    const taskXp = DIFFICULTY_XP[task.difficulty] ?? XP_PER_COMPLETE;
+
     if (!task.completed) {
-      setXp((prev) => prev + XP_PER_COMPLETE);
+      setXp((prev) => prev + taskXp);
 
       if (lastCompletedDate === today) {
         // already counted today
@@ -256,7 +282,7 @@ function App() {
 
       setLastCompletedDate(today);
     } else {
-      setXp((prev) => Math.max(0, prev - XP_PER_COMPLETE));
+      setXp((prev) => Math.max(0, prev - taskXp));
     }
 
     setTasks((prev) =>
@@ -284,10 +310,75 @@ function App() {
     });
   }, [tasks]);
 
+  // ---------------- SHOP PURCHASE ----------------
+  function handlePurchase(item) {
+    if (xp < item.cost) return;
+    if (purchasedItems.includes(item.id)) return;
+    setXp((prev) => prev - item.cost);
+    setPurchasedItems((prev) => [...prev, item.id]);
+  }
+
+  function navigateTo(page) {
+    setCurrentPage(page);
+    setSidebarOpen(false);
+  }
+
   // ---------------- UI ----------------
   return (
     <div className="app">
+      {/* Hamburger Button */}
+      <button
+        type="button"
+        className={`hamburger-button${sidebarOpen ? " is-open" : ""}`}
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle navigation"
+      >
+        <span className="hamburger-line" />
+        <span className="hamburger-line" />
+        <span className="hamburger-line" />
+      </button>
+
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <nav className={`sidebar${sidebarOpen ? " is-open" : ""}`}>
+        <div className="sidebar-header">
+          <h3>Navigation</h3>
+        </div>
+        <ul className="sidebar-nav">
+          <li>
+            <button
+              type="button"
+              className={`sidebar-link${currentPage === "quests" ? " is-active" : ""}`}
+              onClick={() => navigateTo("quests")}
+            >
+              Quest Board
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className={`sidebar-link${currentPage === "shop" ? " is-active" : ""}`}
+              onClick={() => navigateTo("shop")}
+            >
+              Shop
+            </button>
+          </li>
+        </ul>
+        <div className="sidebar-footer">
+          <p>Level {level} · {xp} XP</p>
+        </div>
+      </nav>
+
       <main className="shell">
+        {currentPage === "quests" ? (
+          <>
         <header className="hero">
           <div className="hero-title">
             <p className="hero-kicker">Quest Board</p>
@@ -446,11 +537,13 @@ function App() {
               title={title}
               date={date}
               time={time}
-              reminderMinutes={reminderMinutes}
+              selectedReminders={selectedReminders}
+              difficulty={difficulty}
               setTitle={setTitle}
               setDate={setDate}
               setTime={setTime}
-              setReminderMinutes={setReminderMinutes}
+              toggleReminder={toggleReminder}
+              setDifficulty={setDifficulty}
               addTask={addTask}
               reminderOptions={REMINDER_OPTIONS}
             />
@@ -492,9 +585,18 @@ function App() {
             onReschedule={openRescheduleModal}
             onDelete={deleteTask}
             xpPerComplete={XP_PER_COMPLETE}
-            reminderLabel={reminderLabel}
+            reminderLabel={singleReminderLabel}
+            difficultyXp={DIFFICULTY_XP}
           />
         </section>
+          </>
+        ) : (
+          <Shop
+            xp={xp}
+            onPurchase={handlePurchase}
+            purchasedItems={purchasedItems}
+          />
+        )}
       </main>
 
       {rescheduleTaskId && (
@@ -550,7 +652,7 @@ function App() {
                 <p className="reminder-title">Reminder: {reminder.title}</p>
                 <p className="reminder-meta">
                   {reminder.date} · {reminder.time} ·{" "}
-                  {reminderLabel(reminder.reminderMinutes)}
+                  {singleReminderLabel(reminder.reminderMinutes)}
                 </p>
               </div>
               <button

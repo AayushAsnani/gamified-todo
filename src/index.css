@@ -3,16 +3,16 @@
 :root {
   --font-display: "Fraunces", "Georgia", serif;
   --font-body: "Space Grotesk", "Trebuchet MS", sans-serif;
-  --ink: #2d2d2d;
-  --muted: #6b7280;
-  --accent: #FF8C94;
-  --accent-2: #AEFCCE;
-  --accent-3: #FFCD82;
-  --card: #ffffff;
-  --canvas: #fef9f5;
-  --border: #f0e8e0;
-  --shadow: 0 30px 60px rgba(30, 41, 59, 0.12);
-  --shadow-soft: 0 16px 30px rgba(15, 23, 42, 0.08);
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+  --accent-2: #a78bfa;
+  --accent-3: #c084fc;
+  --card: #6f7e96;
+  --canvas: #0f172a;
+  --border: #334155;
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 16px 30px rgba(0, 0, 0, 0.25);
 
   color: var(--ink);
   background-color: var(--canvas);
@@ -32,7 +32,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(140deg, #AEFCCE 0%, #E6EFC2 25%, #FFCD82 50%, #FFAAA5 75%, #FF8C94 100%);
+  background: #0f172a;
   color: var(--ink);
 }
 
@@ -64,13 +64,14 @@ select {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
-  background: #fffaf4;
+  background: #0f172a;
+  color: #f1f5f9;
   transition: border 150ms ease, box-shadow 150ms ease;
 }
 
 input:focus,
 select:focus {
   outline: none;
-  border-color: #FFAAA5;
-  box-shadow: 0 0 0 3px rgba(255, 140, 148, 0.2);
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
 }

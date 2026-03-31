@@ -22,7 +22,13 @@ const formatDateTime = (date, time) => {
   return `${dateLabel} · ${timeLabel}`;
 };
 
-function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, reminderLabel }) {
+const DIFFICULTY_LABELS = {
+  easy: { label: "Easy", className: "chip-easy" },
+  medium: { label: "Medium", className: "chip-medium" },
+  hard: { label: "Hard", className: "chip-hard" },
+};
+
+function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, reminderLabel, difficultyXp }) {
   const now = Date.now();
 
   if (tasks.length === 0) {
@@ -45,6 +51,11 @@ function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, re
           timeLeft != null &&
           timeLeft > 0 &&
           timeLeft <= 60 * 60 * 1000;
+
+        // Support both legacy single reminder and new array
+        const reminders = task.reminders ?? (task.reminderMinutes != null ? [task.reminderMinutes] : []);
+        const diffInfo = DIFFICULTY_LABELS[task.difficulty] ?? DIFFICULTY_LABELS.easy;
+        const taskXp = (difficultyXp ?? {})[task.difficulty] ?? xpPerComplete;
 
         return (
           <li
@@ -71,11 +82,16 @@ function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, re
               <p className="task-title">{task.title}</p>
               <div className="task-meta">
                 <span className="chip">{formatDateTime(task.date, task.time)}</span>
-                {task.reminderMinutes != null ? (
-                  <span className="chip chip-accent">
-                    {reminderLabel(task.reminderMinutes)}
+                {task.difficulty ? (
+                  <span className={`chip ${diffInfo.className}`}>
+                    {diffInfo.label}
                   </span>
                 ) : null}
+                {reminders.map((minutes) => (
+                  <span key={minutes} className="chip chip-accent">
+                    {reminderLabel(minutes)}
+                  </span>
+                ))}
                 {isSoon ? <span className="chip chip-warn">Due soon</span> : null}
                 {isOverdue ? (
                   <span className="chip chip-danger">Overdue</span>
@@ -84,7 +100,7 @@ function TaskList({ tasks, toggleTask, onReschedule, onDelete, xpPerComplete, re
             </div>
 
             <div className="task-reward">
-              {task.completed ? "Completed" : `+${xpPerComplete} XP`}
+              {task.completed ? "Completed" : `+${taskXp} XP`}
             </div>
 
             <TaskMenu

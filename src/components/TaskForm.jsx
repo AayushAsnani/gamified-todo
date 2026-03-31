@@ -2,15 +2,23 @@ function TaskForm({
   title,
   date,
   time,
-  reminderMinutes,
+  selectedReminders,
+  difficulty,
   setTitle,
   setDate,
   setTime,
-  setReminderMinutes,
+  toggleReminder,
+  setDifficulty,
   addTask,
   reminderOptions,
 }) {
   const today = new Date().toISOString().split("T")[0];
+
+  const difficultyOptions = [
+    { value: "easy", label: "Easy" },
+    { value: "medium", label: "Medium" },
+    { value: "hard", label: "Hard" },
+  ];
 
   return (
     <form className="task-form" onSubmit={addTask}>
@@ -52,18 +60,38 @@ function TaskForm({
       </div>
 
       <div className="field">
-        <label htmlFor="task-reminder">Reminder</label>
-        <select
-          id="task-reminder"
-          value={reminderMinutes}
-          onChange={(e) => setReminderMinutes(e.target.value)}
-        >
+        <label>Reminders</label>
+        <div className="reminder-checkboxes">
           {reminderOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
+            <label key={option.value} className="reminder-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedReminders.includes(option.value)}
+                onChange={() => toggleReminder(option.value)}
+              />
+              <span className="reminder-checkbox-custom" />
+              <span className="reminder-checkbox-text">{option.label}</span>
+            </label>
           ))}
-        </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Difficulty</label>
+        <div className="difficulty-selector">
+          {difficultyOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`difficulty-button difficulty-${option.value}${
+                difficulty === option.value ? " is-selected" : ""
+              }`}
+              onClick={() => setDifficulty(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <button type="submit" className="primary-button">

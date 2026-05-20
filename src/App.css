@@ -300,6 +300,663 @@
   font-size: 0.9rem;
 }
 
+/* ============ Shop Balances ============ */
+.shop-balances {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.shop-crystals {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.shop-items-section h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  color: #f1f5f9;
+  font-size: 1.3rem;
+}
+
+/* ============ Crystal Exchange ============ */
+.crystal-exchange {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(139, 92, 246, 0.06));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 24px;
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.crystal-exchange::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.crystal-exchange-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crystal-exchange-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+  animation: crystalSpin 3s ease-in-out infinite;
+}
+
+.crystal-exchange-subtitle {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.crystal-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.crystal-pack-card {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.9));
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 20px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.crystal-pack-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), transparent 60%);
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  opacity: 0;
+}
+
+.crystal-pack-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.crystal-pack-card:hover::after {
+  opacity: 1;
+}
+
+.crystal-pack-card.is-locked {
+  opacity: 0.55;
+}
+
+.crystal-pack-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(139, 92, 246, 0.15);
+}
+
+.crystal-pack-card.just-bought {
+  animation: purchasePop 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
+}
+
+@keyframes purchasePop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.04); }
+  60% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.crystal-pack-tag {
+  position: absolute;
+  top: 14px;
+  right: -28px;
+  background: linear-gradient(120deg, #f59e0b, #fbbf24);
+  color: #0f172a;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 4px 34px;
+  transform: rotate(35deg);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.crystal-pack-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
+}
+
+.crystal-pack-info {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+
+.crystal-pack-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #f1f5f9;
+}
+
+.crystal-pack-amount {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.crystal-pack-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(139, 92, 246, 0.12);
+}
+
+.crystal-pack-cost {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #fbbf24;
+}
+
+.crystal-buy-button {
+  padding: 8px 20px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #8b5cf6, #a78bfa);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transition: all 180ms ease;
+  white-space: nowrap;
+}
+
+.crystal-buy-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(120deg, #7c3aed, #8b5cf6);
+}
+
+.crystal-buy-button:disabled {
+  background: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+
+/* ============ Currency HUD ============ */
+.currency-hud {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  gap: 10px;
+  animation: hudSlideIn 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes hudSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.currency-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 200ms ease;
+  cursor: default;
+}
+
+.currency-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.currency-xp {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.08));
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.currency-crystal {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.08));
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.currency-icon {
+  font-size: 1.1rem;
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+.crystal-icon {
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.6));
+  animation: crystalSpin 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes crystalSpin {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  75% { transform: scale(1.1) rotate(5deg); }
+}
+
+/* ============ Clothing / Wardrobe Shop ============ */
+.clothing-shop {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(129, 140, 248, 0.05));
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  border-radius: 24px;
+  padding: 28px;
+  display: grid;
+  gap: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.clothing-shop::before {
+  content: "";
+  position: absolute;
+  bottom: -100px;
+  left: -80px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.10), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.clothing-shop-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clothing-shop-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.5));
+}
+
+.clothing-shop-subtitle {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+/* ── Category Tabs ── */
+.clothing-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.clothing-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid rgba(51, 65, 85, 0.6);
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.clothing-tab:hover {
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #f1f5f9;
+  background: rgba(129, 140, 248, 0.08);
+}
+
+.clothing-tab.is-active {
+  border-color: #818cf8;
+  background: rgba(129, 140, 248, 0.15);
+  color: #818cf8;
+  box-shadow: 0 4px 16px rgba(129, 140, 248, 0.2);
+}
+
+.clothing-tab-icon {
+  font-size: 1.2rem;
+}
+
+/* ── Equipped Indicator ── */
+.equipped-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.equipped-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #34d399;
+}
+
+.equipped-item-name {
+  font-weight: 600;
+  color: #f1f5f9;
+  font-size: 0.92rem;
+}
+
+/* ── Clothing Grid ── */
+.clothing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.clothing-card {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.95));
+  border: 1px solid rgba(129, 140, 248, 0.12);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.clothing-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.04), transparent 60%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.clothing-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 12px 40px rgba(129, 140, 248, 0.12), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.clothing-card:hover::after {
+  opacity: 1;
+}
+
+.clothing-card.is-locked {
+  opacity: 0.5;
+}
+
+.clothing-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(129, 140, 248, 0.12);
+}
+
+.clothing-card.is-equipped {
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.1);
+}
+
+.clothing-card.just-bought {
+  animation: purchasePop 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
+}
+
+.clothing-card-tag {
+  position: absolute;
+  top: 14px;
+  right: -28px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 4px 34px;
+  transform: rotate(35deg);
+  z-index: 2;
+}
+
+.clothing-card-tag:not(:empty) {
+  background: linear-gradient(120deg, #f59e0b, #fbbf24);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* ── Clothing Preview Swatch ── */
+.clothing-card-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clothing-swatch {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.clothing-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+  pointer-events: none;
+}
+
+.clothing-swatch-emoji {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  z-index: 1;
+}
+
+.clothing-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Clothing Card Info ── */
+.clothing-card-info {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+
+.clothing-card-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: #f1f5f9;
+}
+
+.clothing-card-color {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.clothing-card-desc {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+/* ── Clothing Card Footer ── */
+.clothing-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(129, 140, 248, 0.1);
+}
+
+.clothing-card-cost {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #a78bfa;
+}
+
+.clothing-owned-badge {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #34d399;
+}
+
+.clothing-buy-button {
+  padding: 8px 18px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #818cf8, #a78bfa);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transition: all 180ms ease;
+  white-space: nowrap;
+}
+
+.clothing-buy-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(129, 140, 248, 0.4);
+  background: linear-gradient(120deg, #6366f1, #818cf8);
+}
+
+.clothing-buy-button:disabled {
+  background: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.clothing-equip-button {
+  padding: 8px 18px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #34d399, #10b981);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transition: all 180ms ease;
+  white-space: nowrap;
+}
+
+.clothing-equip-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(52, 211, 153, 0.4);
+  background: linear-gradient(120deg, #10b981, #059669);
+}
+
+.clothing-equip-button.is-equipped {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  cursor: default;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.clothing-equip-button.just-equipped {
+  animation: equipPulse 500ms ease;
+}
+
+@keyframes equipPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.currency-amount {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.currency-xp .currency-amount {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.currency-crystal .currency-amount {
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.currency-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
 /* ============ App Layout ============ */
 .app {
   min-height: 100vh;

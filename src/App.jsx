@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
-import Shop from "./components/Shop";
+import Shop, { CLOTHING_ITEMS } from "./components/Shop";
 import "./App.css";
 
 const XP_PER_CREATE = 5;
@@ -41,6 +41,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
 
   const [xp, setXp] = useState(0);
+  const [crystals, setCrystals] = useState(0);
   const [streak, setStreak] = useState(0);
   const [lastCompletedDate, setLastCompletedDate] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
@@ -49,6 +50,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState("quests");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState([]);
+  const [equippedItems, setEquippedItems] = useState({ tshirt: null, trousers: null });
 
   // Reschedule modal state
   const [rescheduleTaskId, setRescheduleTaskId] = useState(null);
@@ -71,15 +73,19 @@ function App() {
     try {
       const savedTasks = JSON.parse(localStorage.getItem("tasks"));
       const savedXp = JSON.parse(localStorage.getItem("xp"));
+      const savedCrystals = JSON.parse(localStorage.getItem("crystals"));
       const savedStreak = JSON.parse(localStorage.getItem("streak"));
       const savedLastDate = localStorage.getItem("lastCompletedDate");
       const savedPurchases = JSON.parse(localStorage.getItem("purchasedItems"));
+      const savedEquipped = JSON.parse(localStorage.getItem("equippedItems"));
 
       if (Array.isArray(savedTasks)) setTasks(savedTasks);
       if (typeof savedXp === "number") setXp(savedXp);
+      if (typeof savedCrystals === "number") setCrystals(savedCrystals);
       if (typeof savedStreak === "number") setStreak(savedStreak);
       if (savedLastDate) setLastCompletedDate(savedLastDate);
       if (Array.isArray(savedPurchases)) setPurchasedItems(savedPurchases);
+      if (savedEquipped && typeof savedEquipped === "object") setEquippedItems(savedEquipped);
     } catch (e) {
       console.error("Failed to load localStorage");
     } finally {
@@ -98,17 +104,23 @@ function App() {
   useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("xp", JSON.stringify(xp));
+    localStorage.setItem("crystals", JSON.stringify(crystals));
     localStorage.setItem("streak", JSON.stringify(streak));
     if (lastCompletedDate) {
       localStorage.setItem("lastCompletedDate", lastCompletedDate);
     }
-  }, [xp, streak, lastCompletedDate, isLoaded]);
+  }, [xp, crystals, streak, lastCompletedDate, isLoaded]);
 
   // ---------------- SAVE PURCHASES ----------------
   useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("purchasedItems", JSON.stringify(purchasedItems));
   }, [purchasedItems, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("equippedItems", JSON.stringify(equippedItems));
+  }, [equippedItems, isLoaded]);
 
   // ---------------- REMINDERS ----------------
   useEffect(() => {
@@ -312,10 +324,25 @@ function App() {
 
   // ---------------- SHOP PURCHASE ----------------
   function handlePurchase(item) {
-    if (xp < item.cost) return;
+    if (crystals < item.cost) return;
     if (purchasedItems.includes(item.id)) return;
-    setXp((prev) => prev - item.cost);
+    setCrystals((prev) => prev - item.cost);
     setPurchasedItems((prev) => [...prev, item.id]);
+  }
+
+  function handleEquip(item) {
+    setEquippedItems((prev) => {
+      if (item.category === "tshirts") return { ...prev, tshirt: item.id };
+      if (item.category === "trousers") return { ...prev, trousers: item.id };
+      return prev;
+    });
+  }
+
+  // ---------------- BUY CRYSTALS ----------------
+  function buyCrystals(pack) {
+    if (xp < pack.xpCost) return;
+    setXp((prev) => prev - pack.xpCost);
+    setCrystals((prev) => prev + pack.crystals);
   }
 
   function navigateTo(page) {
@@ -326,6 +353,20 @@ function App() {
   // ---------------- UI ----------------
   return (
     <div className="app">
+      {/* Currency HUD - top right */}
+      <div className="currency-hud">
+        <div className="currency-badge currency-xp">
+          <span className="currency-icon">⚡</span>
+          <span className="currency-amount">{xp}</span>
+          <span className="currency-label">XP</span>
+        </div>
+        <div className="currency-badge currency-crystal">
+          <span className="currency-icon crystal-icon">💎</span>
+          <span className="currency-amount">{crystals}</span>
+          <span className="currency-label">Crystals</span>
+        </div>
+      </div>
+
       {/* Hamburger Button */}
       <button
         type="button"
@@ -439,44 +480,67 @@ function App() {
                 )}
 
                 {/* ===== T-SHIRT ===== */}
-                {/* Shirt body */}
-                <rect x="42" y="82" rx="12" ry="12" width="36" height="42" fill="#6c5ce7" />
-                {/* Collar / neckline */}
-                <path d="M50 82 Q60 90 70 82" stroke="#a29bfe" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                {/* Shirt bottom hem */}
-                <rect x="42" y="120" width="36" height="4" rx="2" fill="#5b4fcf" />
-                {/* Left sleeve */}
-                <g className="avatar-left-arm">
-                  <rect x="22" y="84" rx="8" ry="8" width="24" height="18" fill="#6c5ce7" />
-                  {/* Sleeve cuff */}
-                  <rect x="22" y="96" width="24" height="4" rx="2" fill="#5b4fcf" />
-                  {/* Exposed hand */}
-                  <ellipse cx="30" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
-                </g>
-                {/* Right sleeve */}
-                <g className="avatar-right-arm">
-                  <rect x="74" y="84" rx="8" ry="8" width="24" height="18" fill="#6c5ce7" />
-                  {/* Sleeve cuff */}
-                  <rect x="74" y="96" width="24" height="4" rx="2" fill="#5b4fcf" />
-                  {/* Exposed hand */}
-                  <ellipse cx="90" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
-                </g>
-                {/* Level badge on t-shirt */}
-                <circle cx="60" cy="102" r="8" fill="rgba(255,140,148,0.9)" />
-                <text x="60" y="106" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{level}</text>
+                {(() => {
+                  const equipped = equippedItems?.tshirt;
+                  const clothingData = equipped ? CLOTHING_ITEMS.find(i => i.id === equipped) : null;
+                  const shirtBody = clothingData?.colors?.body ?? "#6c5ce7";
+                  const shirtCollar = clothingData?.colors?.collar ?? "#a29bfe";
+                  const shirtHem = clothingData?.colors?.hem ?? "#5b4fcf";
+                  const shirtSleeve = clothingData?.colors?.sleeve ?? "#6c5ce7";
+                  const shirtBadge = clothingData?.colors?.badge ?? "rgba(255,140,148,0.9)";
+                  return (
+                    <>
+                      {/* Shirt body */}
+                      <rect x="42" y="82" rx="12" ry="12" width="36" height="42" fill={shirtBody} />
+                      {/* Collar / neckline */}
+                      <path d="M50 82 Q60 90 70 82" stroke={shirtCollar} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                      {/* Shirt bottom hem */}
+                      <rect x="42" y="120" width="36" height="4" rx="2" fill={shirtHem} />
+                      {/* Left sleeve */}
+                      <g className="avatar-left-arm">
+                        <rect x="22" y="84" rx="8" ry="8" width="24" height="18" fill={shirtSleeve} />
+                        <rect x="22" y="96" width="24" height="4" rx="2" fill={shirtHem} />
+                        <ellipse cx="30" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
+                      </g>
+                      {/* Right sleeve */}
+                      <g className="avatar-right-arm">
+                        <rect x="74" y="84" rx="8" ry="8" width="24" height="18" fill={shirtSleeve} />
+                        <rect x="74" y="96" width="24" height="4" rx="2" fill={shirtHem} />
+                        <ellipse cx="90" cy="104" rx="6" ry="5" fill="rgba(255,255,255,0.9)" />
+                      </g>
+                      {/* Level badge on t-shirt */}
+                      <circle cx="60" cy="102" r="8" fill={shirtBadge} />
+                      <text x="60" y="106" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{level}</text>
+                    </>
+                  );
+                })()}
+
 
                 {/* ===== PANTS ===== */}
-                {/* Waistband */}
-                <rect x="43" y="122" width="34" height="5" rx="2" fill="#2d3436" />
-                {/* Belt buckle */}
-                <rect x="56" y="122" width="8" height="5" rx="1" fill="#ffeaa7" />
-                {/* Left leg */}
-                <rect x="44" y="126" rx="6" ry="4" width="14" height="30" fill="#636e72" />
-                {/* Right leg */}
-                <rect x="62" y="126" rx="6" ry="4" width="14" height="30" fill="#636e72" />
-                {/* Pant seams */}
-                <line x1="51" y1="128" x2="51" y2="155" stroke="#576060" strokeWidth="1" opacity="0.5" />
-                <line x1="69" y1="128" x2="69" y2="155" stroke="#576060" strokeWidth="1" opacity="0.5" />
+                {(() => {
+                  const equipped = equippedItems?.trousers;
+                  const clothingData = equipped ? CLOTHING_ITEMS.find(i => i.id === equipped) : null;
+                  const waist = clothingData?.colors?.waist ?? "#2d3436";
+                  const buckle = clothingData?.colors?.buckle ?? "#ffeaa7";
+                  const legL = clothingData?.colors?.legL ?? "#636e72";
+                  const legR = clothingData?.colors?.legR ?? "#636e72";
+                  const seam = clothingData?.colors?.seam ?? "#576060";
+                  return (
+                    <>
+                      {/* Waistband */}
+                      <rect x="43" y="122" width="34" height="5" rx="2" fill={waist} />
+                      {/* Belt buckle */}
+                      <rect x="56" y="122" width="8" height="5" rx="1" fill={buckle} />
+                      {/* Left leg */}
+                      <rect x="44" y="126" rx="6" ry="4" width="14" height="30" fill={legL} />
+                      {/* Right leg */}
+                      <rect x="62" y="126" rx="6" ry="4" width="14" height="30" fill={legR} />
+                      {/* Pant seams */}
+                      <line x1="51" y1="128" x2="51" y2="155" stroke={seam} strokeWidth="1" opacity="0.5" />
+                      <line x1="69" y1="128" x2="69" y2="155" stroke={seam} strokeWidth="1" opacity="0.5" />
+                    </>
+                  );
+                })()}
 
                 {/* ===== BOOTS ===== */}
                 {/* Left boot */}
@@ -593,8 +657,12 @@ function App() {
         ) : (
           <Shop
             xp={xp}
+            crystals={crystals}
             onPurchase={handlePurchase}
+            onBuyCrystals={buyCrystals}
             purchasedItems={purchasedItems}
+            equippedItems={equippedItems}
+            onEquip={handleEquip}
           />
         )}
       </main>

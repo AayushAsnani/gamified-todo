@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import Shop, { CLOTHING_ITEMS } from "./components/Shop";
+import {
+  fetchTasks,
+  createTask,
+  updateTask,
+  deleteTaskApi,
+  fetchProgress,
+  updateProgress,
+  fetchShop,
+  updateShop,
+} from "./api";
 import "./App.css";
 
 const XP_PER_CREATE = 5;
@@ -68,59 +78,83 @@ function App() {
   // 🔑 IMPORTANT FLAG
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // ---------------- LOAD FROM STORAGE (ONCE) ----------------
+  // ---------------- LOAD FROM API (ONCE) ----------------
   useEffect(() => {
-    try {
-      const savedTasks = JSON.parse(localStorage.getItem("tasks"));
-      const savedXp = JSON.parse(localStorage.getItem("xp"));
-      const savedCrystals = JSON.parse(localStorage.getItem("crystals"));
-      const savedStreak = JSON.parse(localStorage.getItem("streak"));
-      const savedLastDate = localStorage.getItem("lastCompletedDate");
-      const savedPurchases = JSON.parse(localStorage.getItem("purchasedItems"));
-      const savedEquipped = JSON.parse(localStorage.getItem("equippedItems"));
+    async function loadData() {
+      try {
+        const [tasksData, progressData, shopData] = await Promise.all([
+          fetchTasks(),
+          fetchProgress(),
+          fetchShop(),
+        ]);
 
-      if (Array.isArray(savedTasks)) setTasks(savedTasks);
-      if (typeof savedXp === "number") setXp(savedXp);
-      if (typeof savedCrystals === "number") setCrystals(savedCrystals);
-      if (typeof savedStreak === "number") setStreak(savedStreak);
-      if (savedLastDate) setLastCompletedDate(savedLastDate);
-      if (Array.isArray(savedPurchases)) setPurchasedItems(savedPurchases);
-      if (savedEquipped && typeof savedEquipped === "object") setEquippedItems(savedEquipped);
-    } catch (e) {
-      console.error("Failed to load localStorage");
-    } finally {
-      // ✅ MARK LOADING COMPLETE
-      setIsLoaded(true);
+        if (Array.isArray(tasksData)) setTasks(tasksData);
+        if (typeof progressData.xp === "number") setXp(progressData.xp);
+        if (typeof progressData.crystals === "number") setCrystals(progressData.crystals);
+        if (typeof progressData.streak === "number") setStreak(progressData.streak);
+        if (progressData.lastCompletedDate) setLastCompletedDate(progressData.lastCompletedDate);
+        if (Array.isArray(shopData.purchasedItems)) setPurchasedItems(shopData.purchasedItems);
+        if (shopData.equippedItems && typeof shopData.equippedItems === "object") {
+          setEquippedItems(shopData.equippedItems);
+        }
+      } catch (e) {
+        console.error("Failed to load data from API, falling back to localStorage:", e);
+        // Fallback to localStorage if API is unavailable
+        try {
+          const savedTasks = JSON.parse(localStorage.getItem("tasks"));
+          const savedXp = JSON.parse(localStorage.getItem("xp"));
+          const savedCrystals = JSON.parse(localStorage.getItem("crystals"));
+          const savedStreak = JSON.parse(localStorage.getItem("streak"));
+          const savedLastDate = localStorage.getItem("lastCompletedDate");
+          const savedPurchases = JSON.parse(localStorage.getItem("purchasedItems"));
+          const savedEquipped = JSON.parse(localStorage.getItem("equippedItems"));
+
+          if (Array.isArray(savedTasks)) setTasks(savedTasks);
+          if (typeof savedXp === "number") setXp(savedXp);
+          if (typeof savedCrystals === "number") setCrystals(savedCrystals);
+          if (typeof savedStreak === "number") setStreak(savedStreak);
+          if (savedLastDate) setLastCompletedDate(savedLastDate);
+          if (Array.isArray(savedPurchases)) setPurchasedItems(savedPurchases);
+          if (savedEquipped && typeof savedEquipped === "object") setEquippedItems(savedEquipped);
+        } catch (localErr) {
+          console.error("localStorage fallback also failed:", localErr);
+        }
+      } finally {
+        setIsLoaded(true);
+      }
     }
+
+    loadData();
   }, []);
 
-  // ---------------- SAVE TASKS (ONLY AFTER LOAD) ----------------
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks, isLoaded]);
+  // ---------------- SYNC PROGRESS TO API ----------------
+  const syncProgress = useCallback(
+    async (newXp, newCrystals, newStreak, newLastDate) => {
+      try {
+        await updateProgress({
+          xp: newXp,
+          crystals: newCrystals,
+          streak: newStreak,
+          lastCompletedDate: newLastDate,
+        });
+      } catch (e) {
+        console.error("Failed to sync progress:", e);
+      }
+    },
+    []
+  );
 
-  // ---------------- SAVE XP + STREAK ----------------
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem("xp", JSON.stringify(xp));
-    localStorage.setItem("crystals", JSON.stringify(crystals));
-    localStorage.setItem("streak", JSON.stringify(streak));
-    if (lastCompletedDate) {
-      localStorage.setItem("lastCompletedDate", lastCompletedDate);
+  // ---------------- SYNC SHOP TO API ----------------
+  const syncShop = useCallback(async (newPurchased, newEquipped) => {
+    try {
+      await updateShop({
+        purchasedItems: newPurchased,
+        equippedItems: newEquipped,
+      });
+    } catch (e) {
+      console.error("Failed to sync shop:", e);
     }
-  }, [xp, crystals, streak, lastCompletedDate, isLoaded]);
-
-  // ---------------- SAVE PURCHASES ----------------
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem("purchasedItems", JSON.stringify(purchasedItems));
-  }, [purchasedItems, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem("equippedItems", JSON.stringify(equippedItems));
-  }, [equippedItems, isLoaded]);
+  }, []);
 
   // ---------------- REMINDERS ----------------
   useEffect(() => {
@@ -199,29 +233,41 @@ function App() {
   }
 
   // ---------------- ADD TASK ----------------
-  function addTask(event) {
+  async function addTask(event) {
     event?.preventDefault();
 
     if (!title || !date || !time) return;
 
     const reminderValues = selectedReminders.map((v) => Number(v));
 
-    const newTask = {
-      id: Date.now(),
+    const taskData = {
       title,
       date,
       time,
       reminders: reminderValues,
       difficulty,
-      completed: false,
     };
 
     if (reminderValues.length > 0) {
       requestNotificationPermission();
     }
 
-    setTasks((prev) => [...prev, newTask]);
-    setXp((prev) => prev + XP_PER_CREATE);
+    try {
+      // Create on server — get back the server-assigned id
+      const newTask = await createTask(taskData);
+      setTasks((prev) => [...prev, newTask]);
+
+      const newXp = xp + XP_PER_CREATE;
+      setXp(newXp);
+      await syncProgress(newXp, crystals, streak, lastCompletedDate);
+    } catch (e) {
+      console.error("Failed to add task:", e);
+      // Optimistic fallback: create locally with timestamp id
+      const fallbackTask = { id: Date.now(), ...taskData, completed: false };
+      setTasks((prev) => [...prev, fallbackTask]);
+      setXp((prev) => prev + XP_PER_CREATE);
+    }
+
     setTitle("");
     setDate("");
     setTime("");
@@ -230,7 +276,7 @@ function App() {
   }
 
   // ---------------- DELETE TASK ----------------
-  function deleteTask(id) {
+  async function deleteTask(id) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     // Clear any active reminder for this task
     if (reminderTimers.current.has(id)) {
@@ -238,6 +284,12 @@ function App() {
       reminderTimers.current.delete(id);
     }
     setActiveReminders((prev) => prev.filter((r) => r.taskId !== id));
+
+    try {
+      await deleteTaskApi(id);
+    } catch (e) {
+      console.error("Failed to delete task on server:", e);
+    }
   }
 
   // ---------------- RESCHEDULE TASK ----------------
@@ -255,7 +307,7 @@ function App() {
     setRescheduleTime("");
   }
 
-  function saveReschedule(event) {
+  async function saveReschedule(event) {
     event?.preventDefault();
     if (!rescheduleTaskId || !rescheduleDate || !rescheduleTime) return;
 
@@ -266,11 +318,21 @@ function App() {
           : t
       )
     );
+
+    try {
+      await updateTask(rescheduleTaskId, {
+        date: rescheduleDate,
+        time: rescheduleTime,
+      });
+    } catch (e) {
+      console.error("Failed to reschedule on server:", e);
+    }
+
     closeRescheduleModal();
   }
 
   // ---------------- TOGGLE TASK (XP + STREAK) ----------------
-  function toggleTask(id) {
+  async function toggleTask(id) {
     const today = new Date().toISOString().split("T")[0];
     const yesterday = new Date(Date.now() - 86400000)
       .toISOString()
@@ -281,27 +343,42 @@ function App() {
 
     const taskXp = DIFFICULTY_XP[task.difficulty] ?? XP_PER_COMPLETE;
 
+    let newXp = xp;
+    let newStreak = streak;
+    let newLastDate = lastCompletedDate;
+
     if (!task.completed) {
-      setXp((prev) => prev + taskXp);
+      newXp = xp + taskXp;
 
       if (lastCompletedDate === today) {
         // already counted today
       } else if (lastCompletedDate === yesterday) {
-        setStreak((prev) => prev + 1);
+        newStreak = streak + 1;
       } else {
-        setStreak(1);
+        newStreak = 1;
       }
 
-      setLastCompletedDate(today);
+      newLastDate = today;
     } else {
-      setXp((prev) => Math.max(0, prev - taskXp));
+      newXp = Math.max(0, xp - taskXp);
     }
+
+    setXp(newXp);
+    setStreak(newStreak);
+    setLastCompletedDate(newLastDate);
 
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id ? { ...t, completed: !t.completed } : t
       )
     );
+
+    try {
+      await updateTask(id, { completed: !task.completed });
+      await syncProgress(newXp, crystals, newStreak, newLastDate);
+    } catch (e) {
+      console.error("Failed to toggle task on server:", e);
+    }
   }
 
   const level = Math.floor(xp / 100) + 1;
@@ -323,26 +400,58 @@ function App() {
   }, [tasks]);
 
   // ---------------- SHOP PURCHASE ----------------
-  function handlePurchase(item) {
+  async function handlePurchase(item) {
     if (crystals < item.cost) return;
     if (purchasedItems.includes(item.id)) return;
-    setCrystals((prev) => prev - item.cost);
-    setPurchasedItems((prev) => [...prev, item.id]);
+
+    const newCrystals = crystals - item.cost;
+    const newPurchased = [...purchasedItems, item.id];
+
+    setCrystals(newCrystals);
+    setPurchasedItems(newPurchased);
+
+    try {
+      await syncProgress(xp, newCrystals, streak, lastCompletedDate);
+      await syncShop(newPurchased, equippedItems);
+    } catch (e) {
+      console.error("Failed to sync purchase:", e);
+    }
   }
 
-  function handleEquip(item) {
+  async function handleEquip(item) {
+    let newEquipped;
     setEquippedItems((prev) => {
-      if (item.category === "tshirts") return { ...prev, tshirt: item.id };
-      if (item.category === "trousers") return { ...prev, trousers: item.id };
-      return prev;
+      if (item.category === "tshirts") newEquipped = { ...prev, tshirt: item.id };
+      else if (item.category === "trousers") newEquipped = { ...prev, trousers: item.id };
+      else newEquipped = prev;
+      return newEquipped;
     });
+
+    // Wait for state to settle, then sync
+    try {
+      if (newEquipped) {
+        await syncShop(purchasedItems, newEquipped);
+      }
+    } catch (e) {
+      console.error("Failed to sync equip:", e);
+    }
   }
 
   // ---------------- BUY CRYSTALS ----------------
-  function buyCrystals(pack) {
+  async function buyCrystals(pack) {
     if (xp < pack.xpCost) return;
-    setXp((prev) => prev - pack.xpCost);
-    setCrystals((prev) => prev + pack.crystals);
+
+    const newXp = xp - pack.xpCost;
+    const newCrystals = crystals + pack.crystals;
+
+    setXp(newXp);
+    setCrystals(newCrystals);
+
+    try {
+      await syncProgress(newXp, newCrystals, streak, lastCompletedDate);
+    } catch (e) {
+      console.error("Failed to sync crystal purchase:", e);
+    }
   }
 
   function navigateTo(page) {

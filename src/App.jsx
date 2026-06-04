@@ -721,30 +721,6 @@ function App() {
               reminderOptions={REMINDER_OPTIONS}
             />
           </div>
-          <div className="action-card tips">
-            <h3>Reminder status</h3>
-            {notificationsSupported ? (
-              <p>
-                Desktop reminders are {notificationCopy ?? notificationStatus}.
-                You can still rely on in-app popups.
-              </p>
-            ) : (
-              <p>Desktop notifications are not supported in this browser.</p>
-            )}
-            {notificationsSupported && notificationStatus !== "granted" ? (
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={requestNotificationPermission}
-              >
-                Enable desktop reminders
-              </button>
-            ) : null}
-            <div className="tips-list">
-              <p>Set reminders for your most important quests.</p>
-              <p>Keep a streak going by completing at least one quest per day.</p>
-            </div>
-          </div>
         </section>
 
         <section className="quest-board">

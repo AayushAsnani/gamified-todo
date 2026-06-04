@@ -3,16 +3,16 @@
 :root {
   --font-display: "Fraunces", "Georgia", serif;
   --font-body: "Space Grotesk", "Trebuchet MS", sans-serif;
-  --ink: #f1f5f9;
-  --muted: #94a3b8;
-  --accent: #818cf8;
-  --accent-2: #a78bfa;
-  --accent-3: #c084fc;
-  --card: #6f7e96;
-  --canvas: #0f172a;
-  --border: #334155;
-  --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-  --shadow-soft: 0 16px 30px rgba(0, 0, 0, 0.25);
+  --ink: #2c3e50;
+  --muted: #64748b;
+  --accent: #DBA1AC;
+  --accent-2: #E7E56B;
+  --accent-3: #BCE49B;
+  --card: #81D4CB;
+  --canvas: #F3EFDE;
+  --border: #DBA1AC;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.05);
 
   color: var(--ink);
   background-color: var(--canvas);
@@ -32,7 +32,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--canvas);
   color: var(--ink);
 }
 
@@ -64,14 +64,14 @@ select {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
-  background: #0f172a;
-  color: #f1f5f9;
+  background: #ffffff;
+  color: var(--ink);
   transition: border 150ms ease, box-shadow 150ms ease;
 }
 
 input:focus,
 select:focus {
   outline: none;
-  border-color: #818cf8;
-  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(219, 161, 172, 0.25);
 }

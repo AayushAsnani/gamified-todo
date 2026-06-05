@@ -1,38 +1,34 @@
--- Create the database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS gamified_todo;
-USE gamified_todo;
+-- ─── Drop old single-user tables ────────────────────────────────────────────
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS user_progress;
+DROP TABLE IF EXISTS user_shop;
 
--- Tasks table
+-- ─── Tasks (per-user) ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS tasks (
   id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     VARCHAR(128) NOT NULL,
   title       VARCHAR(255) NOT NULL,
   date        DATE NOT NULL,
   time        TIME NOT NULL,
   reminders   JSON,
   difficulty  ENUM('easy','medium','hard') DEFAULT 'easy',
   completed   BOOLEAN DEFAULT FALSE,
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tasks_user (user_id)
 );
 
--- User progress (single-user, one row)
+-- ─── User progress (per-user, upsert-friendly) ───────────────────────────────
 CREATE TABLE IF NOT EXISTS user_progress (
-  id                  INT PRIMARY KEY DEFAULT 1,
+  user_id             VARCHAR(128) PRIMARY KEY,
   xp                  INT DEFAULT 0,
   crystals            INT DEFAULT 0,
   streak              INT DEFAULT 0,
   last_completed_date DATE DEFAULT NULL
 );
 
--- Shop purchases & equipment
+-- ─── Shop purchases & equipment (per-user, upsert-friendly) ─────────────────
 CREATE TABLE IF NOT EXISTS user_shop (
-  id              INT PRIMARY KEY DEFAULT 1,
+  user_id         VARCHAR(128) PRIMARY KEY,
   purchased_items JSON,
   equipped_items  JSON
 );
-
--- Seed default rows so GET endpoints always return data
-INSERT IGNORE INTO user_progress (id, xp, crystals, streak)
-  VALUES (1, 0, 0, 0);
-
-INSERT IGNORE INTO user_shop (id, purchased_items, equipped_items)
-  VALUES (1, '[]', '{"tshirt": null, "trousers": null}');

@@ -3,10 +3,13 @@ import pool from "../db.js";
 
 const router = Router();
 
-// GET /api/shop — fetch purchased and equipped items
-router.get("/", async (_req, res) => {
+// GET /api/shop — fetch shop data for the current user
+router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM user_shop WHERE id = 1");
+    const [rows] = await pool.query(
+      "SELECT * FROM user_shop WHERE user_id = ?",
+      [req.uid]
+    );
 
     if (rows.length === 0) {
       return res.json({
@@ -26,16 +29,19 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// PUT /api/shop — update purchased and equipped items
+// PUT /api/shop — upsert shop data for the current user
 router.put("/", async (req, res) => {
   try {
     const { purchasedItems, equippedItems } = req.body;
 
     await pool.query(
-      `UPDATE user_shop
-       SET purchased_items = ?, equipped_items = ?
-       WHERE id = 1`,
+      `INSERT INTO user_shop (user_id, purchased_items, equipped_items)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         purchased_items = VALUES(purchased_items),
+         equipped_items = VALUES(equipped_items)`,
       [
+        req.uid,
         JSON.stringify(purchasedItems ?? []),
         JSON.stringify(equippedItems ?? { tshirt: null, trousers: null }),
       ]

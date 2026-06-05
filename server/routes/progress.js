@@ -3,10 +3,13 @@ import pool from "../db.js";
 
 const router = Router();
 
-// GET /api/progress — fetch user progress
-router.get("/", async (_req, res) => {
+// GET /api/progress — fetch progress for the current user
+router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM user_progress WHERE id = 1");
+    const [rows] = await pool.query(
+      "SELECT * FROM user_progress WHERE user_id = ?",
+      [req.uid]
+    );
 
     if (rows.length === 0) {
       return res.json({ xp: 0, crystals: 0, streak: 0, lastCompletedDate: null });
@@ -29,16 +32,20 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// PUT /api/progress — update user progress
+// PUT /api/progress — upsert progress for the current user
 router.put("/", async (req, res) => {
   try {
     const { xp, crystals, streak, lastCompletedDate } = req.body;
 
     await pool.query(
-      `UPDATE user_progress
-       SET xp = ?, crystals = ?, streak = ?, last_completed_date = ?
-       WHERE id = 1`,
-      [xp ?? 0, crystals ?? 0, streak ?? 0, lastCompletedDate || null]
+      `INSERT INTO user_progress (user_id, xp, crystals, streak, last_completed_date)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         xp = VALUES(xp),
+         crystals = VALUES(crystals),
+         streak = VALUES(streak),
+         last_completed_date = VALUES(last_completed_date)`,
+      [req.uid, xp ?? 0, crystals ?? 0, streak ?? 0, lastCompletedDate || null]
     );
 
     res.json({ xp, crystals, streak, lastCompletedDate });

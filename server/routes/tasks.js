@@ -3,11 +3,12 @@ import pool from "../db.js";
 
 const router = Router();
 
-// GET /api/tasks — fetch all tasks
-router.get("/", async (_req, res) => {
+// GET /api/tasks — fetch all tasks for the current user
+router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, title, date, time, reminders, difficulty, completed, created_at FROM tasks ORDER BY completed ASC, CONCAT(date, ' ', time) ASC"
+      "SELECT id, title, date, time, reminders, difficulty, completed, created_at FROM tasks WHERE user_id = ? ORDER BY completed ASC, CONCAT(date, ' ', time) ASC",
+      [req.uid]
     );
 
     const tasks = rows.map((row) => ({
@@ -29,7 +30,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /api/tasks — create a new task
+// POST /api/tasks — create a new task for the current user
 router.post("/", async (req, res) => {
   try {
     const { title, date, time, reminders = [], difficulty = "easy" } = req.body;
@@ -39,8 +40,8 @@ router.post("/", async (req, res) => {
     }
 
     const [result] = await pool.query(
-      "INSERT INTO tasks (title, date, time, reminders, difficulty) VALUES (?, ?, ?, ?, ?)",
-      [title, date, time, JSON.stringify(reminders), difficulty]
+      "INSERT INTO tasks (user_id, title, date, time, reminders, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
+      [req.uid, title, date, time, JSON.stringify(reminders), difficulty]
     );
 
     res.status(201).json({
@@ -58,13 +59,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT /api/tasks/:id — update a task (toggle complete, reschedule, etc.)
+// PUT /api/tasks/:id — update a task (only the owner can update)
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const fields = req.body;
 
-    // Build dynamic SET clause from provided fields
     const allowed = ["title", "date", "time", "reminders", "difficulty", "completed"];
     const updates = [];
     const values = [];
@@ -80,15 +80,17 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ error: "No valid fields to update" });
     }
 
-    values.push(id);
-    await pool.query(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`, values);
+    values.push(id, req.uid);
+    const [result] = await pool.query(
+      `UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`,
+      values
+    );
 
-    // Return updated row
-    const [rows] = await pool.query("SELECT * FROM tasks WHERE id = ?", [id]);
-    if (rows.length === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Task not found" });
     }
 
+    const [rows] = await pool.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [id, req.uid]);
     const row = rows[0];
     res.json({
       id: row.id,
@@ -107,11 +109,14 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/tasks/:id — delete a task
+// DELETE /api/tasks/:id — delete a task (only the owner can delete)
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);
+    const [result] = await pool.query(
+      "DELETE FROM tasks WHERE id = ? AND user_id = ?",
+      [id, req.uid]
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Task not found" });

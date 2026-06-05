@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import Shop, { CLOTHING_ITEMS } from "./components/Shop";
+import LoginPage from "./components/LoginPage";
+import { useAuth } from "./contexts/AuthContext";
 import {
   fetchTasks,
   createTask,
@@ -42,6 +44,8 @@ const buildDateTime = (date, time) => {
 const DIFFICULTY_XP = { easy: 5, medium: 10, hard: 20 };
 
 function App() {
+  const { currentUser, loading: authLoading, logout } = useAuth();
+
   // ---------------- STATE ----------------
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -78,14 +82,26 @@ function App() {
   // 🔑 IMPORTANT FLAG
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // ---------------- LOAD FROM API (ONCE) ----------------
+  // ---------------- LOAD FROM API (when user changes) ----------------
   useEffect(() => {
+    if (!currentUser) return;
+
+    // Reset state on user change
+    setTasks([]);
+    setXp(0);
+    setCrystals(0);
+    setStreak(0);
+    setLastCompletedDate(null);
+    setPurchasedItems([]);
+    setEquippedItems({ tshirt: null, trousers: null });
+    setIsLoaded(false);
+
     async function loadData() {
       try {
         const [tasksData, progressData, shopData] = await Promise.all([
-          fetchTasks(),
-          fetchProgress(),
-          fetchShop(),
+          fetchTasks(currentUser),
+          fetchProgress(currentUser),
+          fetchShop(currentUser),
         ]);
 
         if (Array.isArray(tasksData)) setTasks(tasksData);
@@ -98,63 +114,41 @@ function App() {
           setEquippedItems(shopData.equippedItems);
         }
       } catch (e) {
-        console.error("Failed to load data from API, falling back to localStorage:", e);
-        // Fallback to localStorage if API is unavailable
-        try {
-          const savedTasks = JSON.parse(localStorage.getItem("tasks"));
-          const savedXp = JSON.parse(localStorage.getItem("xp"));
-          const savedCrystals = JSON.parse(localStorage.getItem("crystals"));
-          const savedStreak = JSON.parse(localStorage.getItem("streak"));
-          const savedLastDate = localStorage.getItem("lastCompletedDate");
-          const savedPurchases = JSON.parse(localStorage.getItem("purchasedItems"));
-          const savedEquipped = JSON.parse(localStorage.getItem("equippedItems"));
-
-          if (Array.isArray(savedTasks)) setTasks(savedTasks);
-          if (typeof savedXp === "number") setXp(savedXp);
-          if (typeof savedCrystals === "number") setCrystals(savedCrystals);
-          if (typeof savedStreak === "number") setStreak(savedStreak);
-          if (savedLastDate) setLastCompletedDate(savedLastDate);
-          if (Array.isArray(savedPurchases)) setPurchasedItems(savedPurchases);
-          if (savedEquipped && typeof savedEquipped === "object") setEquippedItems(savedEquipped);
-        } catch (localErr) {
-          console.error("localStorage fallback also failed:", localErr);
-        }
+        console.error("Failed to load data from API:", e);
       } finally {
         setIsLoaded(true);
       }
     }
 
     loadData();
-  }, []);
+  }, [currentUser]);
 
   // ---------------- SYNC PROGRESS TO API ----------------
   const syncProgress = useCallback(
     async (newXp, newCrystals, newStreak, newLastDate) => {
       try {
-        await updateProgress({
-          xp: newXp,
-          crystals: newCrystals,
-          streak: newStreak,
-          lastCompletedDate: newLastDate,
-        });
+        await updateProgress(
+          { xp: newXp, crystals: newCrystals, streak: newStreak, lastCompletedDate: newLastDate },
+          currentUser
+        );
       } catch (e) {
         console.error("Failed to sync progress:", e);
       }
     },
-    []
+    [currentUser]
   );
 
   // ---------------- SYNC SHOP TO API ----------------
   const syncShop = useCallback(async (newPurchased, newEquipped) => {
     try {
-      await updateShop({
-        purchasedItems: newPurchased,
-        equippedItems: newEquipped,
-      });
+      await updateShop(
+        { purchasedItems: newPurchased, equippedItems: newEquipped },
+        currentUser
+      );
     } catch (e) {
       console.error("Failed to sync shop:", e);
     }
-  }, []);
+  }, [currentUser]);
 
   // ---------------- REMINDERS ----------------
   useEffect(() => {
@@ -254,7 +248,7 @@ function App() {
 
     try {
       // Create on server — get back the server-assigned id
-      const newTask = await createTask(taskData);
+      const newTask = await createTask(taskData, currentUser);
       setTasks((prev) => [...prev, newTask]);
 
       const newXp = xp + XP_PER_CREATE;
@@ -286,7 +280,7 @@ function App() {
     setActiveReminders((prev) => prev.filter((r) => r.taskId !== id));
 
     try {
-      await deleteTaskApi(id);
+      await deleteTaskApi(id, currentUser);
     } catch (e) {
       console.error("Failed to delete task on server:", e);
     }
@@ -323,7 +317,7 @@ function App() {
       await updateTask(rescheduleTaskId, {
         date: rescheduleDate,
         time: rescheduleTime,
-      });
+      }, currentUser);
     } catch (e) {
       console.error("Failed to reschedule on server:", e);
     }
@@ -374,7 +368,7 @@ function App() {
     );
 
     try {
-      await updateTask(id, { completed: !task.completed });
+      await updateTask(id, { completed: !task.completed }, currentUser);
       await syncProgress(newXp, crystals, newStreak, newLastDate);
     } catch (e) {
       console.error("Failed to toggle task on server:", e);
@@ -459,6 +453,20 @@ function App() {
     setSidebarOpen(false);
   }
 
+  // ---------------- AUTH GATE ----------------
+  if (authLoading) {
+    return (
+      <div className="auth-loading">
+        <div className="auth-loading-spinner" />
+        <p>Loading your quest...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <LoginPage />;
+  }
+
   // ---------------- UI ----------------
   return (
     <div className="app">
@@ -523,6 +531,15 @@ function App() {
         </ul>
         <div className="sidebar-footer">
           <p>Level {level} · {xp} XP</p>
+          <p className="sidebar-user-email">{currentUser.email || currentUser.displayName}</p>
+          <button
+            type="button"
+            className="signout-button"
+            onClick={logout}
+            id="signout-btn"
+          >
+            Sign Out
+          </button>
         </div>
       </nav>
 

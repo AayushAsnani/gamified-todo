@@ -1,30 +1,22 @@
 import { Router } from "express";
-import pool from "../db.js";
+import UserProgress from "../models/UserProgress.js";
 
 const router = Router();
 
-// GET /api/progress — fetch progress for the current user
+// GET /api/progress — fetch progress for current user
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT * FROM user_progress WHERE user_id = ?",
-      [req.uid]
-    );
+    const progress = await UserProgress.findOne({ userId: req.uid });
 
-    if (rows.length === 0) {
+    if (!progress) {
       return res.json({ xp: 0, crystals: 0, streak: 0, lastCompletedDate: null });
     }
 
-    const row = rows[0];
     res.json({
-      xp: row.xp,
-      crystals: row.crystals,
-      streak: row.streak,
-      lastCompletedDate: row.last_completed_date
-        ? (row.last_completed_date instanceof Date
-            ? row.last_completed_date.toISOString().split("T")[0]
-            : row.last_completed_date)
-        : null,
+      xp: progress.xp,
+      crystals: progress.crystals,
+      streak: progress.streak,
+      lastCompletedDate: progress.lastCompletedDate ?? null,
     });
   } catch (err) {
     console.error("GET /api/progress error:", err);
@@ -32,23 +24,30 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PUT /api/progress — upsert progress for the current user
+// PUT /api/progress — upsert progress for current user
 router.put("/", async (req, res) => {
   try {
     const { xp, crystals, streak, lastCompletedDate } = req.body;
 
-    await pool.query(
-      `INSERT INTO user_progress (user_id, xp, crystals, streak, last_completed_date)
-       VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         xp = VALUES(xp),
-         crystals = VALUES(crystals),
-         streak = VALUES(streak),
-         last_completed_date = VALUES(last_completed_date)`,
-      [req.uid, xp ?? 0, crystals ?? 0, streak ?? 0, lastCompletedDate || null]
+    const progress = await UserProgress.findOneAndUpdate(
+      { userId: req.uid },
+      {
+        $set: {
+          xp: xp ?? 0,
+          crystals: crystals ?? 0,
+          streak: streak ?? 0,
+          lastCompletedDate: lastCompletedDate || null,
+        },
+      },
+      { upsert: true, new: true }
     );
 
-    res.json({ xp, crystals, streak, lastCompletedDate });
+    res.json({
+      xp: progress.xp,
+      crystals: progress.crystals,
+      streak: progress.streak,
+      lastCompletedDate: progress.lastCompletedDate ?? null,
+    });
   } catch (err) {
     console.error("PUT /api/progress error:", err);
     res.status(500).json({ error: "Failed to update progress" });

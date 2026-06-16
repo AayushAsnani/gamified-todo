@@ -19,6 +19,31 @@ import "./App.css";
 const XP_PER_CREATE = 5;
 const XP_PER_COMPLETE = 10;
 
+// ── localStorage cache (survives refresh when backend is down) ────────────────
+function cacheKey(uid, key) { return `gq_${uid}_${key}`; }
+
+function saveCache(uid, progress, tasks, shop) {
+  try {
+    if (progress !== undefined)
+      localStorage.setItem(cacheKey(uid, "progress"), JSON.stringify(progress));
+    if (tasks !== undefined)
+      localStorage.setItem(cacheKey(uid, "tasks"), JSON.stringify(tasks));
+    if (shop !== undefined)
+      localStorage.setItem(cacheKey(uid, "shop"), JSON.stringify(shop));
+  } catch (_) {}
+}
+
+function loadCache(uid) {
+  try {
+    const progress = JSON.parse(localStorage.getItem(cacheKey(uid, "progress"))) ?? {};
+    const tasks    = JSON.parse(localStorage.getItem(cacheKey(uid, "tasks")))    ?? [];
+    const shop     = JSON.parse(localStorage.getItem(cacheKey(uid, "shop")))     ?? {};
+    return { progress, tasks, shop };
+  } catch (_) {
+    return { progress: {}, tasks: [], shop: {} };
+  }
+}
+
 const REMINDER_OPTIONS = [
   { label: "At start time", value: "0" },
   { label: "5 min before", value: "5" },
@@ -97,6 +122,21 @@ function App() {
     setIsLoaded(false);
 
     async function loadData() {
+      // Always load from localStorage first for instant display
+      const cached = loadCache(currentUser.uid);
+      const cp = cached.progress;
+      const ct = cached.tasks;
+      const cs = cached.shop;
+
+      if (Array.isArray(ct) && ct.length > 0) setTasks(ct);
+      if (typeof cp.xp === "number") setXp(cp.xp);
+      if (typeof cp.crystals === "number") setCrystals(cp.crystals);
+      if (typeof cp.streak === "number") setStreak(cp.streak);
+      if (cp.lastCompletedDate) setLastCompletedDate(cp.lastCompletedDate);
+      if (Array.isArray(cs.purchasedItems)) setPurchasedItems(cs.purchasedItems);
+      if (cs.equippedItems && typeof cs.equippedItems === "object") setEquippedItems(cs.equippedItems);
+
+      // Then try to sync with server (overwrites cache with fresh data)
       try {
         const [tasksData, progressData, shopData] = await Promise.all([
           fetchTasks(currentUser),
@@ -104,17 +144,24 @@ function App() {
           fetchShop(currentUser),
         ]);
 
-        if (Array.isArray(tasksData)) setTasks(tasksData);
-        if (typeof progressData.xp === "number") setXp(progressData.xp);
-        if (typeof progressData.crystals === "number") setCrystals(progressData.crystals);
-        if (typeof progressData.streak === "number") setStreak(progressData.streak);
-        if (progressData.lastCompletedDate) setLastCompletedDate(progressData.lastCompletedDate);
-        if (Array.isArray(shopData.purchasedItems)) setPurchasedItems(shopData.purchasedItems);
-        if (shopData.equippedItems && typeof shopData.equippedItems === "object") {
-          setEquippedItems(shopData.equippedItems);
+        if (Array.isArray(tasksData)) {
+          setTasks(tasksData);
+          saveCache(currentUser.uid, undefined, tasksData, undefined);
+        }
+        if (typeof progressData.xp === "number") {
+          setXp(progressData.xp);
+          setCrystals(progressData.crystals);
+          setStreak(progressData.streak);
+          if (progressData.lastCompletedDate) setLastCompletedDate(progressData.lastCompletedDate);
+          saveCache(currentUser.uid, progressData, undefined, undefined);
+        }
+        if (Array.isArray(shopData.purchasedItems)) {
+          setPurchasedItems(shopData.purchasedItems);
+          if (shopData.equippedItems) setEquippedItems(shopData.equippedItems);
+          saveCache(currentUser.uid, undefined, undefined, shopData);
         }
       } catch (e) {
-        console.error("Failed to load data from API:", e);
+        console.warn("API unavailable — using cached data:", e.message);
       } finally {
         setIsLoaded(true);
       }
@@ -126,13 +173,13 @@ function App() {
   // ---------------- SYNC PROGRESS TO API ----------------
   const syncProgress = useCallback(
     async (newXp, newCrystals, newStreak, newLastDate) => {
+      const data = { xp: newXp, crystals: newCrystals, streak: newStreak, lastCompletedDate: newLastDate };
+      // Save to localStorage immediately so refresh works even if API is down
+      saveCache(currentUser.uid, data, undefined, undefined);
       try {
-        await updateProgress(
-          { xp: newXp, crystals: newCrystals, streak: newStreak, lastCompletedDate: newLastDate },
-          currentUser
-        );
+        await updateProgress(data, currentUser);
       } catch (e) {
-        console.error("Failed to sync progress:", e);
+        console.warn("Progress saved locally (API unavailable):", e.message);
       }
     },
     [currentUser]
@@ -140,13 +187,13 @@ function App() {
 
   // ---------------- SYNC SHOP TO API ----------------
   const syncShop = useCallback(async (newPurchased, newEquipped) => {
+    const data = { purchasedItems: newPurchased, equippedItems: newEquipped };
+    // Save to localStorage immediately
+    saveCache(currentUser.uid, undefined, undefined, data);
     try {
-      await updateShop(
-        { purchasedItems: newPurchased, equippedItems: newEquipped },
-        currentUser
-      );
+      await updateShop(data, currentUser);
     } catch (e) {
-      console.error("Failed to sync shop:", e);
+      console.warn("Shop saved locally (API unavailable):", e.message);
     }
   }, [currentUser]);
 
@@ -246,20 +293,28 @@ function App() {
       requestNotificationPermission();
     }
 
+    const newXp = xp + XP_PER_CREATE;
     try {
       // Create on server — get back the server-assigned id
       const newTask = await createTask(taskData, currentUser);
-      setTasks((prev) => [...prev, newTask]);
-
-      const newXp = xp + XP_PER_CREATE;
+      setTasks((prev) => {
+        const updated = [...prev, newTask];
+        saveCache(currentUser.uid, undefined, updated, undefined);
+        return updated;
+      });
       setXp(newXp);
       await syncProgress(newXp, crystals, streak, lastCompletedDate);
     } catch (e) {
-      console.error("Failed to add task:", e);
+      console.warn("Task saved locally (API unavailable):", e.message);
       // Optimistic fallback: create locally with timestamp id
-      const fallbackTask = { id: Date.now(), ...taskData, completed: false };
-      setTasks((prev) => [...prev, fallbackTask]);
-      setXp((prev) => prev + XP_PER_CREATE);
+      const fallbackTask = { id: `local_${Date.now()}`, ...taskData, completed: false };
+      setTasks((prev) => {
+        const updated = [...prev, fallbackTask];
+        saveCache(currentUser.uid, undefined, updated, undefined);
+        return updated;
+      });
+      setXp(newXp);
+      saveCache(currentUser.uid, { xp: newXp, crystals, streak, lastCompletedDate }, undefined, undefined);
     }
 
     setTitle("");
@@ -271,7 +326,11 @@ function App() {
 
   // ---------------- DELETE TASK ----------------
   async function deleteTask(id) {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    // Save the filtered list to localStorage FIRST — so deletion survives refresh
+    const remaining = tasks.filter((t) => t.id !== id);
+    setTasks(remaining);
+    saveCache(currentUser.uid, undefined, remaining, undefined);
+
     // Clear any active reminder for this task
     if (reminderTimers.current.has(id)) {
       clearTimeout(reminderTimers.current.get(id));
@@ -282,7 +341,7 @@ function App() {
     try {
       await deleteTaskApi(id, currentUser);
     } catch (e) {
-      console.error("Failed to delete task on server:", e);
+      console.warn("Delete saved locally (API unavailable):", e.message);
     }
   }
 
@@ -305,13 +364,13 @@ function App() {
     event?.preventDefault();
     if (!rescheduleTaskId || !rescheduleDate || !rescheduleTime) return;
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === rescheduleTaskId
-          ? { ...t, date: rescheduleDate, time: rescheduleTime }
-          : t
-      )
+    const rescheduled = tasks.map((t) =>
+      t.id === rescheduleTaskId
+        ? { ...t, date: rescheduleDate, time: rescheduleTime }
+        : t
     );
+    setTasks(rescheduled);
+    saveCache(currentUser.uid, undefined, rescheduled, undefined);
 
     try {
       await updateTask(rescheduleTaskId, {
@@ -319,7 +378,7 @@ function App() {
         time: rescheduleTime,
       }, currentUser);
     } catch (e) {
-      console.error("Failed to reschedule on server:", e);
+      console.warn("Reschedule saved locally (API unavailable):", e.message);
     }
 
     closeRescheduleModal();
@@ -361,17 +420,26 @@ function App() {
     setStreak(newStreak);
     setLastCompletedDate(newLastDate);
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t
-      )
+    // Update tasks and save to localStorage immediately (before any API call)
+    const updatedTasks = tasks.map((t) =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    );
+    setTasks(updatedTasks);
+
+    // Save progress + tasks to localStorage right away — survives refresh
+    saveCache(
+      currentUser.uid,
+      { xp: newXp, crystals, streak: newStreak, lastCompletedDate: newLastDate },
+      updatedTasks,
+      undefined
     );
 
+    // Fire-and-forget API sync (errors don't affect local state)
     try {
       await updateTask(id, { completed: !task.completed }, currentUser);
       await syncProgress(newXp, crystals, newStreak, newLastDate);
     } catch (e) {
-      console.error("Failed to toggle task on server:", e);
+      console.warn("Task toggle saved locally (API unavailable):", e.message);
     }
   }
 

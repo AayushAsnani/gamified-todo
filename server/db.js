@@ -1,16 +1,23 @@
-import mysql from "mysql2/promise";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "gamified_todo",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const MONGODB_URI = process.env.MONGODB_URI;
 
-export default pool;
+if (!MONGODB_URI) {
+  console.error("❌ MONGODB_URI not set in .env");
+  process.exit(1);
+}
+
+export async function connectDB() {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log("✅ Connected to MongoDB");
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err.message);
+    process.exit(1);
+  }
+}
+
+export default mongoose;

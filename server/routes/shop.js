@@ -1,27 +1,23 @@
 import { Router } from "express";
-import pool from "../db.js";
+import UserShop from "../models/UserShop.js";
 
 const router = Router();
 
-// GET /api/shop — fetch shop data for the current user
+// GET /api/shop — fetch shop data for current user
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT * FROM user_shop WHERE user_id = ?",
-      [req.uid]
-    );
+    const shop = await UserShop.findOne({ userId: req.uid });
 
-    if (rows.length === 0) {
+    if (!shop) {
       return res.json({
         purchasedItems: [],
         equippedItems: { tshirt: null, trousers: null },
       });
     }
 
-    const row = rows[0];
     res.json({
-      purchasedItems: row.purchased_items ?? [],
-      equippedItems: row.equipped_items ?? { tshirt: null, trousers: null },
+      purchasedItems: shop.purchasedItems ?? [],
+      equippedItems: shop.equippedItems ?? { tshirt: null, trousers: null },
     });
   } catch (err) {
     console.error("GET /api/shop error:", err);
@@ -29,25 +25,26 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PUT /api/shop — upsert shop data for the current user
+// PUT /api/shop — upsert shop data for current user
 router.put("/", async (req, res) => {
   try {
     const { purchasedItems, equippedItems } = req.body;
 
-    await pool.query(
-      `INSERT INTO user_shop (user_id, purchased_items, equipped_items)
-       VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         purchased_items = VALUES(purchased_items),
-         equipped_items = VALUES(equipped_items)`,
-      [
-        req.uid,
-        JSON.stringify(purchasedItems ?? []),
-        JSON.stringify(equippedItems ?? { tshirt: null, trousers: null }),
-      ]
+    const shop = await UserShop.findOneAndUpdate(
+      { userId: req.uid },
+      {
+        $set: {
+          purchasedItems: purchasedItems ?? [],
+          equippedItems: equippedItems ?? { tshirt: null, trousers: null },
+        },
+      },
+      { upsert: true, new: true }
     );
 
-    res.json({ purchasedItems, equippedItems });
+    res.json({
+      purchasedItems: shop.purchasedItems,
+      equippedItems: shop.equippedItems,
+    });
   } catch (err) {
     console.error("PUT /api/shop error:", err);
     res.status(500).json({ error: "Failed to update shop data" });
